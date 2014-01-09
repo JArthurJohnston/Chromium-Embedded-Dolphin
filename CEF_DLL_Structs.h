@@ -1,6 +1,31 @@
-#include <stddef.h>
+//CEFDLLStructs
+
 #include <stdlib.h>
 #define bool int
+
+/*
+** A list of all the structs used in the LibCef.dll **
+cef_string_t 		--
+cef_url_parts_t		--
+cef_thread_id_t		--
+cef_settings_t		--
+cef_app_t			--
+cef_task_t			?? cef_post_task
+cef_v8handler_t		?? cef_register_extension
+*/
+/*
+cef_proxy_handler_t			-?
+cef_string_list_t			-?
+log_severity				--
+graphics_implementation		--
+cef_base_t					-?
+*/
+
+enum cef_thread_id_t {
+  TID_UI      = 0,
+  TID_IO      = 1,
+  TID_FILE    = 2,
+};
 
 typedef enum {
   ANGLE_IN_PROCESS = 0,
@@ -20,23 +45,25 @@ typedef enum  {
 } cef_log_severity_t;
 
 typedef wchar_t char16_t;
-
 typedef struct _cef_string_utf16_t {
   char16_t* str;
   size_t length;
   void (*dtor)(char16_t* str);
 } cef_string_utf16_t;
-
-/* not currently being used
-typedef struct _cef_string_utf8_t {
-  char* str;
-  size_t length;
-  void (*dtor)(char* str);
-} cef_string_utf8_t;
-*/
-
 typedef cef_string_utf16_t cef_string_t; 
+
 typedef void* cef_string_list_t;
+
+typedef struct _cef_urlparts_t {
+  cef_string_t spec;
+  cef_string_t scheme;
+  cef_string_t username;
+  cef_string_t password;
+  cef_string_t host;
+  cef_string_t port;
+  cef_string_t path;
+  cef_string_t query;
+} cef_urlparts_t;
 
 typedef struct _cef_settings_t {
   size_t size;
@@ -63,13 +90,22 @@ typedef struct _cef_settings_t {
   int context_safety_implementation;
 } cef_settings_t;
 
-typedef struct _cef_urlparts_t {
-  cef_string_t spec;
-  cef_string_t scheme;
-  cef_string_t username;
-  cef_string_t password;
-  cef_string_t host;
-  cef_string_t port;
-  cef_string_t path;
-  cef_string_t query;
-} cef_urlparts_t;
+//cefCallback found in cef_callback.h
+typedef struct _cef_base_t {
+  size_t size;
+  int (CEF_CALLBACK *add_ref)(struct _cef_base_t* self);
+  int (CEF_CALLBACK *release)(struct _cef_base_t* self);
+  int (CEF_CALLBACK *get_refct)(struct _cef_base_t* self);
+} cef_base_t;
+
+typedef struct _cef_app_t {
+  cef_base_t base;
+  struct _cef_proxy_handler_t* (CEF_CALLBACK *get_proxy_handler)(
+      struct _cef_app_t* self);
+} cef_app_t;
+
+typedef struct _cef_proxy_handler_t {
+  cef_base_t base;
+  void (CEF_CALLBACK *get_proxy_for_url)(struct _cef_proxy_handler_t* self,
+      const cef_string_t* url, struct _cef_proxy_info_t* proxy_info);
+} cef_proxy_handler_t;
